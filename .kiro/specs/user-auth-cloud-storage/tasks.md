@@ -1,0 +1,158 @@
+# 实现计划
+
+- [x] 1. 搭建后端项目结构和基础设施
+  - [x] 1.1 初始化 Node.js 项目并安装依赖
+    - 创建 server 目录，初始化 package.json
+    - 安装 express, sqlite3, better-sqlite3, bcrypt, jsonwebtoken, cors
+    - 安装开发依赖 jest, fast-check
+    - _Requirements: 7.1, 7.2_
+  - [x] 1.2 创建数据库模块和表结构
+    - 创建 server/db.js 数据库连接模块
+    - 创建 users 表和 sales_data 表
+    - _Requirements: 7.1_
+  - [x] 1.3 创建 Express 应用基础结构
+    - 创建 server/app.js 主应用文件
+    - 配置 CORS、JSON 解析中间件
+    - 创建路由结构
+    - _Requirements: 5.1_
+
+- [x] 2. 实现用户认证后端服务
+  - [x] 2.1 实现密码哈希和验证工具函数
+    - 创建 server/utils/password.js
+    - 实现 hashPassword 和 verifyPassword 函数
+    - _Requirements: 7.1, 7.2_
+  - [x] 2.2 编写密码哈希属性测试
+    - **Property 13: 密码哈希存储**
+    - **Validates: Requirements 7.1, 7.2**
+  - [x] 2.3 实现 JWT 工具函数
+    - 创建 server/utils/jwt.js
+    - 实现 generateToken 和 verifyToken 函数
+    - 设置 7 天过期时间
+    - _Requirements: 7.3, 1.5_
+  - [x] 2.4 编写 JWT 过期时间属性测试
+    - **Property 14: Token 过期时间设置**
+    - **Validates: Requirements 7.3**
+  - [x] 2.5 实现认证中间件
+    - 创建 server/middleware/auth.js
+    - 验证 Authorization header 中的 JWT
+    - _Requirements: 2.4, 2.5_
+
+- [x] 3. 实现用户注册和登录 API
+  - [x] 3.1 实现用户注册接口
+    - 创建 POST /api/auth/register 路由
+    - 实现用户名和密码验证
+    - 创建用户并返回 token
+    - _Requirements: 1.1, 1.2, 1.3, 1.4, 1.5_
+  - [x] 3.2 编写注册验证属性测试
+    - **Property 1: 注册成功产生有效会话**
+    - **Property 2: 重复用户名注册被拒绝**
+    - **Property 3: 短密码被拒绝**
+    - **Property 4: 空白用户名被拒绝**
+    - **Validates: Requirements 1.1, 1.2, 1.3, 1.4, 1.5**
+  - [x] 3.3 实现用户登录接口
+    - 创建 POST /api/auth/login 路由
+    - 验证凭证并返回 token 和用户信息
+    - _Requirements: 2.1, 2.2_
+  - [x] 3.4 编写登录验证属性测试
+    - **Property 5: 正确凭证登录成功**
+    - **Property 6: 错误凭证登录失败**
+    - **Validates: Requirements 2.1, 2.2**
+  - [x] 3.5 实现登出和获取用户信息接口
+    - 创建 POST /api/auth/logout 路由
+    - 创建 GET /api/auth/me 路由
+    - _Requirements: 3.1_
+
+- [x] 4. Checkpoint - 确保所有测试通过
+  - 确保所有测试通过，如有问题请询问用户。
+
+- [x] 5. 实现销售数据 API
+  - [x] 5.1 实现获取用户数据接口
+    - 创建 GET /api/data 路由
+    - 返回当前用户的所有销售数据
+    - _Requirements: 2.3, 4.4_
+  - [x] 5.2 实现上传数据接口
+    - 创建 POST /api/data 路由
+    - 保存月度销售数据到数据库
+    - _Requirements: 4.1_
+  - [x] 5.3 实现删除数据接口
+    - 创建 DELETE /api/data/:id 路由
+    - 删除指定的月度数据
+    - _Requirements: 4.2_
+  - [x] 5.4 编写数据同步属性测试
+    - **Property 9: 数据上传同步**
+    - **Property 10: 数据删除同步**
+    - **Validates: Requirements 4.1, 4.2**
+
+- [x] 6. 实现前端认证模块
+  - [x] 6.1 创建 AuthManager 模块
+    - 在 app.js 中添加 AuthManager 对象
+    - 实现 register, login, logout 方法
+    - 实现 validateUsername, validatePassword 方法
+    - 实现 restoreSession 方法
+    - _Requirements: 1.1, 2.1, 3.1, 2.4_
+  - [x] 6.2 编写前端输入验证属性测试
+    - **Property 3: 短密码被拒绝**
+    - **Property 4: 空白用户名被拒绝**
+    - **Validates: Requirements 1.3, 1.4**
+
+- [x] 7. 实现前端云同步模块
+  - [x] 7.1 创建 CloudSyncManager 模块
+    - 实现 uploadData, deleteData, downloadAllData 方法
+    - 实现网络状态检测
+    - 实现同步状态管理
+    - _Requirements: 4.1, 4.2, 4.4, 5.2_
+  - [x] 7.2 创建 LocalCacheManager 模块
+    - 实现用户数据缓存
+    - 实现待同步操作队列
+    - _Requirements: 5.2, 5.3_
+  - [x] 7.3 编写数据同步属性测试
+    - **Property 7: 登录后数据加载**
+    - **Property 11: 云端数据优先**
+    - **Validates: Requirements 2.3, 4.4, 4.5**
+
+- [x] 8. 实现前端认证 UI
+  - [x] 8.1 添加认证相关 HTML 结构
+    - 在 index.html 添加登录/注册模态框
+    - 添加头部用户状态显示区域
+    - 添加同步状态指示器
+    - _Requirements: 6.1, 6.2, 6.3, 6.4_
+  - [x] 8.2 添加认证相关 CSS 样式
+    - 添加登录/注册表单样式
+    - 添加用户状态显示样式
+    - 添加同步状态指示器样式
+    - _Requirements: 6.1, 6.2, 6.3, 6.4_
+  - [x] 8.3 创建 AuthUI 模块
+    - 实现 showLoginForm, showRegisterForm 方法
+    - 实现 updateHeaderUserStatus 方法
+    - 实现表单提交事件处理
+    - _Requirements: 6.1, 6.2, 3.3_
+  - [x] 8.4 编写 UI 状态属性测试
+    - **Property 12: UI状态与登录状态一致**
+    - **Validates: Requirements 6.1, 6.2**
+
+- [x] 9. 集成认证和数据同步功能
+  - [x] 9.1 修改 StateManager 集成云同步
+    - 修改 addMonthData 方法调用 CloudSyncManager.uploadData
+    - 修改 removeMonthData 方法调用 CloudSyncManager.deleteData
+    - 修改 init 方法支持从云端加载数据
+    - _Requirements: 4.1, 4.2, 2.3_
+  - [x] 9.2 添加应用初始化逻辑
+    - 页面加载时调用 AuthManager.restoreSession
+    - 根据登录状态初始化数据源
+    - _Requirements: 2.4_
+  - [x] 9.3 编写登出清除属性测试
+    - **Property 8: 登出清除会话和缓存**
+    - **Validates: Requirements 3.1, 3.2**
+
+- [x] 10. 创建服务器启动脚本
+  - [x] 10.1 创建服务器入口文件
+    - 创建 server/index.js
+    - 配置端口和启动逻辑
+    - _Requirements: 5.1_
+  - [x] 10.2 更新 package.json 脚本
+    - 添加 start 和 dev 脚本
+    - 添加 test 脚本
+    - _Requirements: 5.1_
+
+- [x] 11. Final Checkpoint - 确保所有测试通过
+  - 确保所有测试通过，如有问题请询问用户。

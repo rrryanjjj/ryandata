@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>销售数据对比系统</title>
+    <link rel="stylesheet" href="styles.css">
+    <!-- SheetJS for Excel parsing -->
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+    <!-- Chart.js for trend charts -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header with Search Bar and User Status -->
+        <header class="app-header">
+            <div class="header-left">
+                <h1>销售数据对比系统</h1>
+                <!-- Sync Status Indicator -->
+                <div class="sync-status" id="sync-status" style="display: none;">
+                    <span class="sync-icon" id="sync-icon">🔄</span>
+                    <span class="sync-text" id="sync-text">同步中...</span>
+                </div>
+            </div>
+            <div class="header-right">
+                <div class="search-container">
+                    <input type="text" id="search-input" placeholder="搜索月份、品类或商品名称..." />
+                    <button id="search-clear" class="btn btn-secondary" title="清除搜索">✕</button>
+                </div>
+                <!-- User Status Area -->
+                <div class="user-status" id="user-status">
+                    <!-- Logged out state (default) -->
+                    <div class="user-logged-out" id="user-logged-out">
+                        <button id="show-login-btn" class="btn btn-primary">登录</button>
+                        <button id="show-register-btn" class="btn btn-secondary">注册</button>
+                    </div>
+                    <!-- Logged in state (hidden by default) -->
+                    <div class="user-logged-in" id="user-logged-in" style="display: none;">
+                        <span class="username" id="display-username"></span>
+                        <button id="logout-btn" class="btn btn-secondary">登出</button>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- File Upload Section -->
+        <section class="upload-section">
+            <div class="upload-area" id="upload-area">
+                <input type="file" id="file-input" accept=".xls,.xlsx" />
+                <div class="upload-prompt">
+                    <span class="upload-icon">📁</span>
+                    <p>点击或拖拽Excel文件到此处上传</p>
+                    <p class="upload-hint">支持 .xls 和 .xlsx 格式</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Column Selection Section (hidden by default) -->
+        <section class="column-selection-section" id="column-selection" style="display: none;">
+            <h2>选择要显示的列</h2>
+            <div class="month-input">
+                <label for="month-name">月份名称：</label>
+                <input type="text" id="month-name" placeholder="例如：2024年1月" />
+            </div>
+            <div class="special-columns">
+                <div class="special-column-select">
+                    <label for="category-column">品类列：</label>
+                    <select id="category-column"></select>
+                </div>
+                <div class="special-column-select">
+                    <label for="product-column">商品名称列：</label>
+                    <select id="product-column"></select>
+                </div>
+                <div class="special-column-select">
+                    <label for="quantity-column">销售数量列：</label>
+                    <select id="quantity-column"></select>
+                </div>
+                <div class="special-column-select">
+                    <label for="sales-column">销售金额列：</label>
+                    <select id="sales-column"></select>
+                </div>
+            </div>
+            <div class="column-checkboxes" id="column-checkboxes"></div>
+            <div class="column-actions">
+                <button id="confirm-columns" class="btn btn-primary">确认导入</button>
+                <button id="cancel-columns" class="btn btn-secondary">取消</button>
+            </div>
+        </section>
+
+        <!-- Data Display Section -->
+        <section class="data-display-section" id="data-display">
+            <div class="slider-nav" id="slider-nav" style="display: none;">
+                <div class="slider-nav-buttons">
+                    <button class="slider-btn" id="slider-prev" title="上一个">◀</button>
+                    <button class="slider-btn" id="slider-next" title="下一个">▶</button>
+                </div>
+                <span class="slider-info" id="slider-info"></span>
+            </div>
+            <div class="months-container" id="months-container">
+                <!-- Month regions will be dynamically added here -->
+                <div class="empty-state" id="empty-state">
+                    <p>暂无数据，请上传Excel文件开始</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Chart Modal -->
+        <div class="modal-overlay" id="chart-modal" style="display: none;">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3 id="chart-title">商品销售趋势</h3>
+                    <button class="modal-close" id="modal-close">✕</button>
+                </div>
+                <div class="modal-body">
+                    <canvas id="trend-chart"></canvas>
+                    <p class="chart-message" id="chart-message" style="display: none;"></p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Confirm Delete Modal -->
+        <div class="modal-overlay" id="confirm-modal" style="display: none;">
+            <div class="modal-content confirm-dialog">
+                <div class="modal-header">
+                    <h3>确认删除</h3>
+                    <button class="modal-close" id="confirm-modal-close">✕</button>
+                </div>
+                <div class="modal-body">
+                    <p id="confirm-message">确定要删除该月份的数据吗？</p>
+                    <div class="confirm-actions">
+                        <button id="confirm-yes" class="btn btn-danger">确认删除</button>
+                        <button id="confirm-no" class="btn btn-secondary">取消</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Auth Modal (Login/Register) -->
+        <div class="modal-overlay" id="auth-modal" style="display: none;">
+            <div class="modal-content auth-dialog">
+                <div class="modal-header">
+                    <h3 id="auth-modal-title">登录</h3>
+                    <button class="modal-close" id="auth-modal-close">✕</button>
+                </div>
+                <div class="modal-body">
+                    <!-- Login Form -->
+                    <form id="login-form" class="auth-form">
+                        <div class="form-group">
+                            <label for="login-username">用户名</label>
+                            <input type="text" id="login-username" placeholder="请输入用户名" autocomplete="username" />
+                            <span class="form-error" id="login-username-error"></span>
+                        </div>
+                        <div class="form-group">
+                            <label for="login-password">密码</label>
+                            <input type="password" id="login-password" placeholder="请输入密码" autocomplete="current-password" />
+                            <span class="form-error" id="login-password-error"></span>
+                        </div>
+                        <div class="form-error form-error-general" id="login-error"></div>
+                        <button type="submit" class="btn btn-primary btn-block">登录</button>
+                        <p class="auth-switch">
+                            还没有账号？<a href="#" id="switch-to-register">立即注册</a>
+                        </p>
+                    </form>
+                    <!-- Register Form -->
+                    <form id="register-form" class="auth-form" style="display: none;">
+                        <div class="form-group">
+                            <label for="register-username">用户名</label>
+                            <input type="text" id="register-username" placeholder="请输入用户名" autocomplete="username" />
+                            <span class="form-error" id="register-username-error"></span>
+                        </div>
+                        <div class="form-group">
+                            <label for="register-password">密码</label>
+                            <input type="password" id="register-password" placeholder="请输入密码（至少6位）" autocomplete="new-password" />
+                            <span class="form-error" id="register-password-error"></span>
+                        </div>
+                        <div class="form-group">
+                            <label for="register-password-confirm">确认密码</label>
+                            <input type="password" id="register-password-confirm" placeholder="请再次输入密码" autocomplete="new-password" />
+                            <span class="form-error" id="register-password-confirm-error"></span>
+                        </div>
+                        <div class="form-error form-error-general" id="register-error"></div>
+                        <button type="submit" class="btn btn-primary btn-block">注册</button>
+                        <p class="auth-switch">
+                            已有账号？<a href="#" id="switch-to-login">立即登录</a>
+                        </p>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Error/Success Messages -->
+        <div class="message-container" id="message-container"></div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
