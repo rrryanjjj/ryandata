@@ -5,6 +5,7 @@
 
 const express = require('express');
 const cors = require('cors');
+const path = require('path');
 
 const app = express();
 
@@ -35,8 +36,16 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
-// 404 处理
-app.use((req, res) => {
+// 静态文件服务 - 提供前端文件
+app.use(express.static(path.join(__dirname, '..')));
+
+// 前端路由 - 返回 index.html
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, '..', 'index.html'));
+});
+
+// 404 处理 - 只对 API 路由返回 JSON
+app.use('/api', (req, res) => {
   res.status(404).json({ success: false, error: '接口不存在' });
 });
 

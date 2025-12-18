@@ -10,8 +10,10 @@ const COLOR_PALETTE = [
 const STORAGE_KEY = 'sales_data_comparator_data';
 const AUTH_TOKEN_KEY = 'sales_data_auth_token';
 const AUTH_USER_KEY = 'sales_data_auth_user';
-// 生产环境使用相对路径，开发环境使用 localhost
-const API_BASE_URL = window.location.hostname === 'localhost' 
+// 开发环境和本地文件都使用 localhost:3000
+const API_BASE_URL = (window.location.hostname === 'localhost' || 
+    window.location.hostname === '' || 
+    window.location.protocol === 'file:')
     ? 'http://localhost:3000/api' 
     : '/api';
 
