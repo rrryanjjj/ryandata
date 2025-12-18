@@ -10,7 +10,10 @@ const COLOR_PALETTE = [
 const STORAGE_KEY = 'sales_data_comparator_data';
 const AUTH_TOKEN_KEY = 'sales_data_auth_token';
 const AUTH_USER_KEY = 'sales_data_auth_user';
-const API_BASE_URL = 'http://localhost:3000/api';
+// 生产环境使用相对路径，开发环境使用 localhost
+const API_BASE_URL = window.location.hostname === 'localhost' 
+    ? 'http://localhost:3000/api' 
+    : '/api';
 
 // ============================================
 // AuthManager Module - 用户认证管理
